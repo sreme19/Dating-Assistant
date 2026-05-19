@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, appendFileSync } from 'fs';
 import { join, resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import inquirer from 'inquirer';
@@ -151,6 +151,19 @@ export class BestieInterviewMode {
     return profile;
   }
 
+  private makeInterviewDir(femaleProfileId: string, matchName: string): string {
+    const date = new Date().toISOString().slice(0, 10);
+    const slug = matchName.toLowerCase().replace(/\s+/g, '_');
+    const dir = join(PROFILES_DIR, femaleProfileId, 'interviews', `${slug}_${date}`);
+    mkdirSync(dir, { recursive: true });
+    return dir;
+  }
+
+  private appendToLog(logPath: string, speaker: string, text: string): void {
+    const line = `\n### ${speaker}\n${text}\n`;
+    appendFileSync(logPath, line);
+  }
+
   private async runConversationLoop(
     sessionId: string,
     userId: string,
@@ -158,20 +171,29 @@ export class BestieInterviewMode {
     femaleProfile: ProfileMeta,
     preferences: string | null
   ): Promise<void> {
-    // Build opening trigger — includes female preferences so AI tailors every question to her
+    // Set up interview log file
+    const interviewDir = this.makeInterviewDir(femaleProfile.id, matchProfile.matchName);
+    const logPath = join(interviewDir, 'conversation.md');
+    const header =
+      `# Interview — ${matchProfile.matchName}\n` +
+      `**Profile:** ${femaleProfile.name} (${femaleProfile.id})\n` +
+      `**Date:** ${new Date().toLocaleString()}\n` +
+      `**Match:** ${matchProfile.matchName}, ${matchProfile.matchInfo.replace(/\n/g, ' | ')}\n\n---\n`;
+    writeFileSync(logPath, header);
+
     const prefSection = preferences
-      ? `\n\n---\nHER PREFERENCES (use these to tailor every question and evaluation):\n${preferences}\n---`
+      ? `\n\n---\nHER PREFERENCES:\n${preferences}\n---`
       : '';
 
     const openingTrigger =
       `Female profile: ${femaleProfile.name}, age ${femaleProfile.age}${prefSection}\n\n` +
       `Match to interview: ${matchProfile.matchName}\n${matchProfile.matchInfo}\n\n` +
-      `Generate 3-4 opening interview questions for ${matchProfile.matchName} based on her preferences. ` +
-      `Also give an initial compatibility snapshot based on his profile alone.`;
+      `Give a one-sentence initial compatibility note based on his profile, then ask your FIRST single question.`;
 
-    this.cli.displayLoading(`Generating opening questions for ${matchProfile.matchName}`);
+    this.cli.displayLoading(`Starting interview with ${matchProfile.matchName}`);
     const opening = await this.engine.processUserInput(sessionId, openingTrigger);
     this.cli.displayConversation('AI', opening.message);
+    this.appendToLog(logPath, 'AI Bestie', opening.message);
 
     while (await this.engine.canContinueConversation(sessionId)) {
       const session = await this.db.getSession(sessionId);
@@ -185,9 +207,14 @@ export class BestieInterviewMode {
 
       if (matchResponse.toLowerCase() === 'exit') break;
 
+      this.appendToLog(logPath, matchProfile.matchName, matchResponse);
+
       this.cli.displayLoading('Analyzing response');
       const response = await this.engine.processUserInput(sessionId, matchResponse);
       this.cli.displayConversation('AI', response.message);
+      this.appendToLog(logPath, 'AI Bestie', response.message);
     }
+
+    this.cli.displaySuccess(`Conversation saved → ${interviewDir}`);
   }
 }
