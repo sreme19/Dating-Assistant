@@ -287,6 +287,7 @@ export class BestieInterviewMode {
       p => p.name.toLowerCase() === matchProfile.matchName.toLowerCase()
     );
 
+    const isExisting = !!match;
     if (match) {
       maleProfileId = match.id;
       this.cli.displayInfo(`Updating existing profile for ${matchProfile.matchName}`);
@@ -299,33 +300,39 @@ export class BestieInterviewMode {
     const interviewsDir = join(profileDir, 'interviews');
     mkdirSync(interviewsDir, { recursive: true });
 
-    // Write profile.json
-    const meta = {
-      id: maleProfileId,
-      name: matchProfile.matchName,
-      info: matchProfile.matchInfo,
-      createdAt: match ? undefined : new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    writeFileSync(join(profileDir, 'profile.json'), JSON.stringify(meta, null, 2));
+    // Only write profile.json for new profiles
+    if (!isExisting) {
+      const meta = {
+        id: maleProfileId,
+        name: matchProfile.matchName,
+        info: matchProfile.matchInfo,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      writeFileSync(join(profileDir, 'profile.json'), JSON.stringify(meta, null, 2));
+    }
 
     // Copy interview log into his folder
     const interviewCopyName = `${interviewedBy.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.md`;
     const logContent = readFileSync(logPath, 'utf-8');
     writeFileSync(join(interviewsDir, interviewCopyName), logContent);
 
-    // Synthesize personality.md via Claude
-    this.cli.displayLoading(`Synthesizing ${matchProfile.matchName}'s personality profile`);
-    try {
-      const personality = await this.engine.synthesizeMalePersonality(
-        logContent,
-        matchProfile.matchName,
-        matchProfile.matchInfo
-      );
-      writeFileSync(join(profileDir, 'personality.md'), personality);
-      this.cli.displaySuccess(`Male profile saved → male_profiles/${maleProfileId}/`);
-    } catch (err) {
-      this.cli.displayInfo('Could not synthesize personality (API error) — profile saved without it.');
+    // Synthesize personality.md via Claude (only for new profiles)
+    if (!isExisting) {
+      this.cli.displayLoading(`Synthesizing ${matchProfile.matchName}'s personality profile`);
+      try {
+        const personality = await this.engine.synthesizeMalePersonality(
+          logContent,
+          matchProfile.matchName,
+          matchProfile.matchInfo
+        );
+        writeFileSync(join(profileDir, 'personality.md'), personality);
+        this.cli.displaySuccess(`Male profile created → male_profiles/${maleProfileId}/`);
+      } catch (err) {
+        this.cli.displayInfo('Could not synthesize personality (API error) — profile saved without it.');
+      }
+    } else {
+      this.cli.displaySuccess(`Interview saved to ${maleProfileId}/interviews/`);
     }
   }
 
