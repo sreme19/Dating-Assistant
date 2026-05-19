@@ -132,6 +132,49 @@ export class BestieInterviewMode {
   private async collectMatchInformation(userId: string): Promise<MatchProfile> {
     this.cli.displayInfo("Now let's enter the match's details.");
 
+    const existingMales = this.loadMaleProfiles();
+    let profile: MatchProfile;
+
+    if (existingMales.length > 0) {
+      const choices = [
+        ...existingMales.map(p => ({
+          name: `${p.name}  [${p.id}]`,
+          value: p.id,
+        })),
+        { name: '+ Create new profile', value: '__new__' },
+      ];
+
+      const { selected } = await inquirer.prompt([{
+        type: 'list',
+        name: 'selected',
+        message: 'Select an existing male profile or create a new one:',
+        choices,
+      }]);
+
+      if (selected === '__new__') {
+        profile = await this.createNewMatchProfile(userId);
+      } else {
+        const maleProfile = existingMales.find(p => p.id === selected)!;
+        profile = {
+          matchId: randomUUID(),
+          userId,
+          matchName: maleProfile.name,
+          matchInfo: maleProfile.info,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          interviewSessions: [],
+        };
+        await this.matchManager.createMatchProfile(profile);
+        this.cli.displaySuccess(`Using profile for ${maleProfile.name}`);
+      }
+    } else {
+      profile = await this.createNewMatchProfile(userId);
+    }
+
+    return profile;
+  }
+
+  private async createNewMatchProfile(userId: string): Promise<MatchProfile> {
     const matchName = await this.cli.getUserInput('Match name');
     const matchAge = await this.cli.getUserInput('Match age');
     const matchOccupation = await this.cli.getUserInput('Match occupation');
@@ -286,14 +329,14 @@ export class BestieInterviewMode {
     }
   }
 
-  private loadMaleProfiles(): Array<{ id: string; name: string }> {
+  private loadMaleProfiles(): Array<{ id: string; name: string; info: string }> {
     if (!existsSync(MALE_PROFILES_DIR)) return [];
     return readdirSync(MALE_PROFILES_DIR, { withFileTypes: true })
       .filter(d => d.isDirectory())
       .flatMap(d => {
         try {
           const meta = JSON.parse(readFileSync(join(MALE_PROFILES_DIR, d.name, 'profile.json'), 'utf-8'));
-          return [{ id: meta.id, name: meta.name }];
+          return [{ id: meta.id, name: meta.name, info: meta.info || '' }];
         } catch {
           return [];
         }
