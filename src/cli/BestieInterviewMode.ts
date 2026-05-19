@@ -13,7 +13,7 @@ import { MatchProfile, SessionMode, BestieSubMode } from '../models/types.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const PROJECT_ROOT = resolve(__dirname, '../..');
-const PROFILES_DIR = join(PROJECT_ROOT, 'profiles');
+const PROFILES_DIR = join(PROJECT_ROOT, 'female_profiles');
 const MALE_PROFILES_DIR = join(PROJECT_ROOT, 'male_profiles');
 
 interface ProfileMeta {

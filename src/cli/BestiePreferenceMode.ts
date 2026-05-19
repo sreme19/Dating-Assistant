@@ -12,7 +12,7 @@ import { SessionMode, BestieSubMode, KBType } from '../models/types.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const PROJECT_ROOT = resolve(__dirname, '../..');
-const PROFILES_DIR = join(PROJECT_ROOT, 'profiles');
+const PROFILES_DIR = join(PROJECT_ROOT, 'female_profiles');
 
 interface ProfileMeta {
   id: string;
