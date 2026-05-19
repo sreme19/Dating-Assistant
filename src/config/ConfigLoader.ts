@@ -1,12 +1,11 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { homedir } from 'os';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 
-/**
- * ConfigLoader handles configuration management
- * 
- * Validates: Requirements 23, 16
- */
+const CONFIG_DIR = path.join(homedir(), '.dating-assistant');
+const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
+
 export class ConfigLoader {
   private static instance: ConfigLoader;
   private config: Record<string, any> = {};
@@ -15,9 +14,6 @@ export class ConfigLoader {
     this.loadConfiguration();
   }
 
-  /**
-   * Get singleton instance
-   */
   static getInstance(): ConfigLoader {
     if (!ConfigLoader.instance) {
       ConfigLoader.instance = new ConfigLoader();
@@ -25,14 +21,44 @@ export class ConfigLoader {
     return ConfigLoader.instance;
   }
 
-  /**
-   * Load configuration from environment and files
-   */
+  /** Returns true if an API key is available (env or saved config), without throwing. */
+  static hasApiKey(): boolean {
+    if (process.env.ANTHROPIC_API_KEY) return true;
+    try {
+      if (existsSync(CONFIG_FILE)) {
+        const saved = JSON.parse(readFileSync(CONFIG_FILE, 'utf-8'));
+        return !!saved.anthropicApiKey;
+      }
+    } catch {}
+    return false;
+  }
+
+  /** Persist the API key to ~/.dating-assistant/config.json for future runs. */
+  static saveApiKey(key: string): void {
+    if (!existsSync(CONFIG_DIR)) mkdirSync(CONFIG_DIR, { recursive: true });
+    let existing: Record<string, any> = {};
+    try {
+      if (existsSync(CONFIG_FILE)) existing = JSON.parse(readFileSync(CONFIG_FILE, 'utf-8'));
+    } catch {}
+    writeFileSync(CONFIG_FILE, JSON.stringify({ ...existing, anthropicApiKey: key }, null, 2), { mode: 0o600 });
+  }
+
+  /** Reset the saved instance so the next getInstance() picks up a freshly saved key. */
+  static reset(): void {
+    ConfigLoader.instance = undefined as any;
+  }
+
   private loadConfiguration(): void {
-    // Load Claude API key
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    // Priority: env var → saved config file
+    let apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey && existsSync(CONFIG_FILE)) {
+      try {
+        const saved = JSON.parse(readFileSync(CONFIG_FILE, 'utf-8'));
+        apiKey = saved.anthropicApiKey;
+      } catch {}
+    }
     if (!apiKey) {
-      throw new Error('ANTHROPIC_API_KEY environment variable is not set');
+      throw new Error('Anthropic API key not found. Run the app once to set it up.');
     }
     this.config.claudeApiKey = apiKey;
 

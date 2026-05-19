@@ -13,16 +13,29 @@ import { KnowledgeBaseManager } from './database/KnowledgeBaseManager.js';
 import { SessionManager } from './database/SessionManager.js';
 import { SessionMode, BestieSubMode } from './models/types.js';
 
-/**
- * Main application entry point
- */
 async function main(): Promise<void> {
   let db: DatabaseManager | null = null;
   let cli: CLIManager | null = null;
 
   try {
-    // Initialize CLI
     cli = new CLIManager();
+
+    // One-time API key setup — prompts once, saves to ~/.dating-assistant/config.json
+    if (!ConfigLoader.hasApiKey()) {
+      cli.displayInfo('Welcome! To get started, enter your Anthropic API key.');
+      cli.displayInfo('It will be saved locally and never asked again.');
+      const { default: inquirer } = await import('inquirer');
+      const { apiKey } = await inquirer.prompt([{
+        type: 'password',
+        name: 'apiKey',
+        message: 'Anthropic API key (sk-ant-...):',
+        mask: '*',
+        validate: (v: string) => v.startsWith('sk-') ? true : 'Key should start with sk-',
+      }]);
+      ConfigLoader.saveApiKey(apiKey);
+      cli.displaySuccess("API key saved. You won't be asked again.");
+    }
+
     cli.displayLoading('Initializing database');
 
     // Load configuration

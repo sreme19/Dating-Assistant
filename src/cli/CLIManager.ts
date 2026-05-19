@@ -162,8 +162,9 @@ export class CLIManager {
    * 
    * @param error - Error message
    */
-  displayError(error: string): void {
+  async displayError(error: string): Promise<void> {
     console.log(chalk.red(`\n❌ Error: ${error}\n`));
+    await this.getUserInput('Press Enter to continue');
   }
 
   /**

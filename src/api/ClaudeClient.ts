@@ -43,7 +43,7 @@ export class ClaudeClient {
       try {
         const response = await Promise.race([
           this.client.messages.create({
-            model: 'claude-3-5-sonnet-20241022',
+            model: 'claude-sonnet-4-6',
             max_tokens: 1024,
             system: systemPrompt,
             messages: [
@@ -165,7 +165,7 @@ export class ClaudeClient {
       // Try to make a simple API call
       await Promise.race([
         this.client.messages.create({
-          model: 'claude-3-5-sonnet-20241022',
+          model: 'claude-sonnet-4-6',
           max_tokens: 10,
           messages: [
             {
