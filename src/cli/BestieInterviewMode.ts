@@ -14,6 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const PROJECT_ROOT = resolve(__dirname, '../..');
 const PROFILES_DIR = join(PROJECT_ROOT, 'profiles');
+const MALE_PROFILES_DIR = join(PROJECT_ROOT, 'male_profiles');
 
 interface ProfileMeta {
   id: string;
@@ -91,10 +92,13 @@ export class BestieInterviewMode {
       this.cli.displayInfo(`Session ID: ${session.sessionId}`);
 
       // Step 4: run interview
-      await this.runConversationLoop(session.sessionId, userId, matchProfile, femaleProfile, preferences);
+      const interviewLogPath = await this.runConversationLoop(session.sessionId, userId, matchProfile, femaleProfile, preferences);
 
       const summary = await this.engine.finalizeSession(session.sessionId);
       this.cli.displaySessionSummary(summary);
+
+      // Step 5: offer to save a male profile
+      await this.offerSaveMaleProfile(matchProfile, femaleProfile.name, interviewLogPath);
     } catch (error) {
       await this.cli.displayError(error instanceof Error ? error.message : String(error));
     }
@@ -170,7 +174,7 @@ export class BestieInterviewMode {
     matchProfile: MatchProfile,
     femaleProfile: ProfileMeta,
     preferences: string | null
-  ): Promise<void> {
+  ): Promise<string> {
     // Set up interview log file
     const interviewDir = this.makeInterviewDir(femaleProfile.id, matchProfile.matchName);
     const logPath = join(interviewDir, 'conversation.md');
@@ -216,5 +220,83 @@ export class BestieInterviewMode {
     }
 
     this.cli.displaySuccess(`Conversation saved → ${interviewDir}`);
+    return logPath;
+  }
+
+  private async offerSaveMaleProfile(
+    matchProfile: MatchProfile,
+    interviewedBy: string,
+    logPath: string
+  ): Promise<void> {
+    const { save } = await inquirer.prompt([{
+      type: 'confirm',
+      name: 'save',
+      message: `Save a profile for ${matchProfile.matchName}?`,
+      default: true,
+    }]);
+    if (!save) return;
+
+    // Build or find profile ID
+    const existingProfiles = this.loadMaleProfiles();
+    let maleProfileId: string;
+
+    const match = existingProfiles.find(
+      p => p.name.toLowerCase() === matchProfile.matchName.toLowerCase()
+    );
+
+    if (match) {
+      maleProfileId = match.id;
+      this.cli.displayInfo(`Updating existing profile for ${matchProfile.matchName}`);
+    } else {
+      const shortCode = randomUUID().replace(/-/g, '').slice(0, 6);
+      maleProfileId = `${matchProfile.matchName.toLowerCase().replace(/\s+/g, '_')}_${shortCode}`;
+    }
+
+    const profileDir = join(MALE_PROFILES_DIR, maleProfileId);
+    const interviewsDir = join(profileDir, 'interviews');
+    mkdirSync(interviewsDir, { recursive: true });
+
+    // Write profile.json
+    const meta = {
+      id: maleProfileId,
+      name: matchProfile.matchName,
+      info: matchProfile.matchInfo,
+      createdAt: match ? undefined : new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    writeFileSync(join(profileDir, 'profile.json'), JSON.stringify(meta, null, 2));
+
+    // Copy interview log into his folder
+    const interviewCopyName = `${interviewedBy.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.md`;
+    const logContent = readFileSync(logPath, 'utf-8');
+    writeFileSync(join(interviewsDir, interviewCopyName), logContent);
+
+    // Synthesize personality.md via Claude
+    this.cli.displayLoading(`Synthesizing ${matchProfile.matchName}'s personality profile`);
+    try {
+      const personality = await this.engine.synthesizeMalePersonality(
+        logContent,
+        matchProfile.matchName,
+        matchProfile.matchInfo
+      );
+      writeFileSync(join(profileDir, 'personality.md'), personality);
+      this.cli.displaySuccess(`Male profile saved → male_profiles/${maleProfileId}/`);
+    } catch (err) {
+      this.cli.displayInfo('Could not synthesize personality (API error) — profile saved without it.');
+    }
+  }
+
+  private loadMaleProfiles(): Array<{ id: string; name: string }> {
+    if (!existsSync(MALE_PROFILES_DIR)) return [];
+    return readdirSync(MALE_PROFILES_DIR, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .flatMap(d => {
+        try {
+          const meta = JSON.parse(readFileSync(join(MALE_PROFILES_DIR, d.name, 'profile.json'), 'utf-8'));
+          return [{ id: meta.id, name: meta.name }];
+        } catch {
+          return [];
+        }
+      });
   }
 }

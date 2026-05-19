@@ -245,6 +245,39 @@ export class ConversationEngine {
   }
 
   /**
+   * Synthesize a male personality profile from an interview conversation log.
+   */
+  async synthesizeMalePersonality(conversationLog: string, name: string, matchInfo: string): Promise<string> {
+    const systemPrompt = `You are a dating analyst. Read an interview conversation and write a concise, honest personality profile of the man in markdown.
+
+Structure it as:
+# Personality Profile — {name}
+
+## Who He Is
+2-3 sentences capturing his overall vibe and character.
+
+## What He's Looking For
+Bullet points drawn directly from his answers.
+
+## Green Flags
+Bullet points — genuine positives surfaced in the interview.
+
+## Yellow Flags
+Bullet points — things worth watching or probing further.
+
+## Red Flags
+Bullet points — genuine concerns, or "None identified" if clean.
+
+## Compatibility Pattern
+1 paragraph on what type of woman he'd likely suit best, based on his answers.
+
+Be honest, specific, and base everything on what was actually said — no filler.`;
+
+    const userMessage = `Name: ${name}\n${matchInfo}\n\nInterview log:\n${conversationLog}`;
+    return this.claude.generateResponse(systemPrompt, userMessage);
+  }
+
+  /**
    * Build interview system prompt
    */
   private buildInterviewSystemPrompt(context: SessionContext): string {
@@ -325,21 +358,21 @@ Focus on:
    * Build wingman system prompt
    */
   private buildWingmanSystemPrompt(context: SessionContext): string {
-    return `You are AI Wingman, a strategic dating coach for men.
+    return `You are AI Wingman, a sharp and direct dating coach for men.
+
+If the man shared his profile (from a past interview) at the start of the session, use it as your foundation — reference specific things from his profile when relevant, call out patterns you notice, and tailor every piece of advice to who he actually is rather than giving generic tips.
 
 Your role:
-- Provide actionable, strategic dating advice
-- Help navigate dating scenarios with confidence
-- Explain the reasoning behind recommendations
-- Maintain context across multiple turns
-- Focus on practical next steps
+- Give actionable, specific advice — no vague platitudes
+- Reference his profile context when it's relevant ("Based on how you came across in your interview...")
+- Be honest if his behavior is the problem
+- Keep advice practical and grounded in the real situation he describes
 
 Focus on:
-- Communication strategies
-- Building genuine connections
-- Reading social cues
-- Handling rejection gracefully
-- Long-term relationship building`;
+- What to say and how to say it
+- Reading the situation accurately
+- Fixing patterns that are holding him back
+- Building genuine connections, not just tactics`;
   }
 
   /**
