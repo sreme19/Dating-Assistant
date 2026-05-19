@@ -1,5 +1,6 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
+import * as readline from 'readline';
 import { UserMode, SessionMode, BestieSubMode } from '../models/types.js';
 
 /**
@@ -117,21 +118,19 @@ export class CLIManager {
    * @returns Promise that resolves to the user input
    */
   async getUserInput(prompt: string = 'Your response'): Promise<string> {
-    const answers = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'input',
-        message: prompt,
-        validate: (input: string) => {
-          if (!input || input.trim().length === 0) {
-            return 'Please enter a non-empty response';
-          }
-          return true;
-        },
-      },
-    ]);
-
-    return answers.input.trim();
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });
+    return new Promise(resolve => {
+      rl.question(chalk.bold(`\n${prompt}: `), answer => {
+        rl.close();
+        const trimmed = answer.trim();
+        if (!trimmed) {
+          // Re-prompt on empty input
+          resolve(this.getUserInput(prompt));
+        } else {
+          resolve(trimmed);
+        }
+      });
+    });
   }
 
   /**
