@@ -20,6 +20,7 @@ Before installing Dating Assistant, ensure you have:
   - Free tier includes $5 in credits
 
 - **Disk Space**: ~50MB for database and dependencies
+  - Allow additional space if you keep profile photo assets locally
 
 ## Installation Steps
 
@@ -99,6 +100,21 @@ npm list        # Should show all packages
 # Run tests
 npm run test:run  # Should show 173 tests passing
 ```
+
+### Verify Profile Library
+
+The current app includes profile folders in:
+
+```bash
+ls female_profiles
+ls male_profiles
+```
+
+Expected high-level layout:
+
+- female preferences in `female_profiles/<profile>/preferences.md`
+- male personality summaries in `male_profiles/<profile>/personality.md`
+- optional profile photos in each profile's `photos/` folder
 
 ### First Run
 
@@ -207,11 +223,12 @@ npm cache clean --force
 After installation:
 
 1. Read [Quick Start Guide](Quick-Start-Guide)
-2. Choose your mode:
+2. Review [Latest Features](Latest-Features)
+3. Choose your mode:
    - [AI Bestie Mode Guide](AI-Bestie-Mode-Guide) for female users
    - [AI Wingman Mode Guide](AI-Wingman-Mode-Guide) for male users
-3. Check [Configuration](Configuration) for advanced options
-4. See [Troubleshooting](Troubleshooting) if issues arise
+4. Check [Configuration](Configuration) for advanced options
+5. See [Troubleshooting](Troubleshooting) if issues arise
 
 ## Getting Help
 

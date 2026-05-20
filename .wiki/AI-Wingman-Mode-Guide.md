@@ -9,6 +9,7 @@ AI Wingman is your personal dating coach designed specifically for male users. I
 - Maintain context across multiple conversation turns
 - Navigate dating scenarios and challenges
 - Build confidence and improve dating skills
+- Use saved male profile context from prior interviews and `personality.md`
 
 ## Getting Started
 
@@ -21,6 +22,19 @@ AI Wingman is your personal dating coach designed specifically for male users. I
    - View Previous Sessions
    - Manage Custom Prompts
 
+## Profile Library
+
+Male profiles are stored in `male_profiles/`.
+
+Each profile folder can include:
+
+- `profile.json` for identity and archetype metadata
+- `personality.md` for AI-readable personality context
+- `interviews/` for saved interview notes
+- `photos/` for optional profile visuals
+
+The current library includes 21 male archetype profiles. See [Latest Features](Latest-Features) for the full profile-library overview.
+
 ## Get Dating Advice
 
 ### Purpose
@@ -30,6 +44,7 @@ Get strategic, actionable dating advice from an AI coach with expertise in relat
 ### How It Works
 
 1. **Ask Your Question**
+   - Select or create your male profile first
    - Describe a dating scenario
    - Ask for specific advice
    - Share your concerns or challenges
@@ -39,6 +54,7 @@ Get strategic, actionable dating advice from an AI coach with expertise in relat
    - Actionable steps
    - Reasoning behind advice
    - Real-world examples
+   - Personalized context from `personality.md` when available
 
 3. **Continue Conversation**
    - Ask follow-up questions
@@ -116,6 +132,7 @@ AI Wingman can help with:
 - **Take Notes**: Write down key points
 - **Apply Advice**: Test recommendations in real situations
 - **Reflect**: Think about what works for you
+- **Keep Personality Notes Updated**: A richer `personality.md` gives Wingman better context
 
 ### Session Limits
 

@@ -35,19 +35,33 @@ When you start the application, you'll see:
 ╚════════════════════════════════════════╝
 ```
 
+## Current Profile Library
+
+The app now ships with an archetype profile library:
+
+- 22 female profiles in `female_profiles/`
+- 21 male profiles in `male_profiles/`
+- female preference files at `female_profiles/<profile>/preferences.md`
+- male personality summaries at `male_profiles/<profile>/personality.md`
+- optional profile photos in each profile's `photos/` folder
+
+For the full feature inventory, see [Latest Features](Latest-Features).
+
 ## AI Bestie Mode (Female Users)
 
 ### Interview a Match
 
 1. Select "Interview a Match"
-2. Enter match information:
+2. Choose an existing female profile
+3. Select an existing male profile or enter match information:
    - Name
    - Age
    - Occupation
    - Interests
-3. AI Bestie generates interview questions
-4. Provide match responses
-5. Get analysis and insights
+4. AI Bestie generates interview questions from the saved female preferences
+5. Provide match responses
+6. Get analysis and insights
+7. Save interview transcripts and optional male personality summaries
 
 **Example:**
 ```
@@ -70,7 +84,7 @@ work-life balance with that goal?"
 1. Select "Gather My Preferences"
 2. Answer questions about your dating goals
 3. AI Bestie asks progressive follow-up questions
-4. Your preferences are saved automatically
+4. Your preferences are saved automatically under `female_profiles/`
 
 **Example:**
 ```
@@ -93,10 +107,11 @@ AI Bestie: "Great! Tell me more about what
 
 ### Get Dating Advice
 
-1. Select "Get Dating Advice"
-2. Ask your dating question or describe a scenario
-3. AI Wingman provides strategic advice
-4. Continue conversation for follow-up questions
+1. Select or create your male profile
+2. Select "Get Dating Advice"
+3. Ask your dating question or describe a scenario
+4. AI Wingman provides strategic advice using `personality.md` when available
+5. Continue conversation for follow-up questions
 
 **Example:**
 ```
@@ -155,12 +170,14 @@ in the match's responses and highlight them."
 - Your preferences are used to evaluate matches
 - Build preferences first for better interviews
 - Review red flags identified by AI Bestie
+- Let AI Bestie answer match questions from your saved preferences when preparing for two-way conversations
 
 ### AI Wingman Mode
 - Provide context for better advice
 - Ask follow-up questions for deeper insights
 - Save sessions to review advice later
 - Create custom prompts for specific scenarios
+- Keep your `personality.md` updated so advice reflects how you actually come across
 
 ### General
 - Sessions auto-save after each turn
@@ -195,6 +212,7 @@ in the match's responses and highlight them."
 
 - Read [AI Bestie Mode Guide](AI-Bestie-Mode-Guide) for detailed features
 - Read [AI Wingman Mode Guide](AI-Wingman-Mode-Guide) for detailed features
+- Review [Latest Features](Latest-Features) for the profile library and photo workflow
 - Check [Custom Prompts](Custom-Prompts) for advanced customization
 - See [Troubleshooting](Troubleshooting) for common issues
 
@@ -207,5 +225,5 @@ in the match's responses and highlight them."
 
 ---
 
-**Last Updated**: May 19, 2026
+**Last Updated**: May 21, 2026
 **Version**: 1.0.0

@@ -9,6 +9,7 @@ AI Bestie is your personal dating coach designed specifically for female users. 
 - Build a personalized preferences knowledge base
 - Track interview history and insights
 - Identify red flags and compatibility issues
+- Use saved archetype profiles, preference files, interview transcripts, and profile photos
 
 ## Getting Started
 
@@ -22,6 +23,19 @@ AI Bestie is your personal dating coach designed specifically for female users. 
    - View Previous Sessions
    - Manage Custom Prompts
 
+## Profile Library
+
+Female profiles are stored in `female_profiles/`.
+
+Each profile folder can include:
+
+- `profile.json` for identity and archetype metadata
+- `preferences.md` for dating preferences and screening logic
+- `interviews/` for saved match interview transcripts
+- `photos/` for optional profile visuals
+
+The current library includes 22 female archetype profiles. See [Latest Features](Latest-Features) for the full profile-library overview.
+
 ## Interview a Match
 
 ### Purpose
@@ -30,28 +44,38 @@ Interview mode helps you evaluate a potential match through structured questions
 
 ### How It Works
 
-1. **Enter Match Information**
+1. **Choose Profile Context**
+   - Select the female profile whose preferences should guide the interview
+   - Review or use the saved `preferences.md` context
+
+2. **Select or Enter Match Information**
+   - Choose an existing male profile when available
+   - Or enter new match details:
    - Name
    - Age
    - Occupation
    - Interests (comma-separated)
    - Any other relevant details
 
-2. **AI Bestie Generates Questions**
+3. **AI Bestie Generates Questions**
    - Initial questions based on match profile
    - Questions tailored to your preferences
    - Follow-up questions based on responses
 
-3. **Provide Match Responses**
+4. **Provide Match Responses**
    - Enter what the match said
    - Be as detailed as possible
    - Include direct quotes when relevant
 
-4. **Get Analysis**
+5. **Get Analysis**
    - AI Bestie analyzes responses
    - Identifies red flags
    - Highlights compatibility points
    - Provides insights
+
+6. **Save Outputs**
+   - Interview transcripts can be saved under the relevant female profile
+   - Male profile and personality summaries can be created or updated
 
 ### Example Interview
 
@@ -86,6 +110,17 @@ a new relationship alongside that schedule?"
 - **Trust Your Gut**: AI Bestie provides analysis, but your intuition matters
 - **Take Notes**: Write down key points for later reference
 - **Review Red Flags**: Pay attention to identified concerns
+- **Keep Context Fresh**: Update `preferences.md` when your standards or deal-breakers change
+
+## Answering Match Questions
+
+AI Bestie can also help prepare answers when a match asks the woman a question. It uses the saved female preference profile so responses stay aligned with her values, boundaries, and dating goals.
+
+Use this for:
+
+- preparing concise responses before or after a date
+- checking whether a match's question style feels compatible
+- avoiding generic answers that do not reflect the saved profile
 
 ### Session Limits
 
@@ -114,7 +149,7 @@ Build a personalized preferences knowledge base that AI Bestie uses to evaluate 
 
 3. **Preference Synthesis**
    - Your answers are synthesized into a KB
-   - Stored for future interviews
+   - Stored for future interviews in `female_profiles/<profile>/preferences.md`
    - Updated as preferences evolve
 
 ### Example Preference Session
