@@ -16,6 +16,7 @@
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
+import http from 'http';
 import readline from 'readline';
 import { fileURLToPath } from 'url';
 import os from 'os';
@@ -26,21 +27,21 @@ const PROJECT_ROOT = path.resolve(__dirname, '..');
 const CONFIG_DIR = path.join(os.homedir(), '.dating-assistant');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 
-// Archetype-based search terms
+// Archetype-based search terms (portrait-focused)
 const searchTerms = {
   // Female profiles
-  jade_Sugar_Baby: ['young professional woman', 'elegant woman', 'confident woman', 'stylish woman', 'luxury lifestyle'],
-  freya_ENM: ['independent woman', 'thoughtful woman', 'modern woman', 'diverse woman', 'confident woman'],
-  dominique_BDSM: ['strong woman', 'confident woman', 'sophisticated woman', 'elegant woman', 'mysterious woman'],
-  stella_Swinger: ['confident couple woman', 'beautiful woman', 'happy woman', 'sophisticated woman', 'modern woman'],
-  aria_Monogamish: ['beautiful woman', 'happy woman', 'confident woman', 'thoughtful woman', 'modern woman'],
+  jade_Sugar_Baby: ['woman portrait headshot professional', 'woman headshot elegant', 'woman portrait confident smile', 'professional woman portrait', 'woman headshot luxury'],
+  freya_ENM: ['woman portrait independent', 'woman headshot thoughtful', 'woman portrait modern', 'woman headshot diverse', 'woman portrait confident'],
+  dominique_BDSM: ['woman portrait strong', 'woman headshot confident', 'woman portrait sophisticated', 'woman headshot elegant', 'woman portrait mysterious'],
+  stella_Swinger: ['woman portrait beautiful smile', 'woman headshot happy', 'woman portrait sophisticated', 'woman headshot modern', 'couple portrait happy'],
+  aria_Monogamish: ['woman portrait beautiful', 'woman headshot happy', 'woman portrait confident', 'woman headshot thoughtful', 'woman portrait modern'],
 
   // Male profiles
-  victor_Sugar_Daddy: ['successful man', 'mature businessman', 'confident man', 'elegant man', 'professional man'],
-  kai_ENM: ['thoughtful man', 'modern man', 'compassionate man', 'intelligent man', 'confident man'],
-  dante_BDSM: ['strong man', 'confident man', 'sophisticated man', 'masculine man', 'mysterious man'],
-  owen_Swinger: ['happy man', 'confident man', 'attractive man', 'modern man', 'charismatic man'],
-  alex_Monogamish: ['thoughtful man', 'intelligent man', 'confident man', 'modern man', 'handsome man'],
+  victor_Sugar_Daddy: ['man portrait headshot professional', 'man headshot mature businessman', 'man portrait confident', 'man headshot elegant', 'man portrait successful'],
+  kai_ENM: ['man portrait thoughtful', 'man headshot modern', 'man portrait compassionate', 'man headshot intelligent', 'man portrait confident'],
+  dante_BDSM: ['man portrait strong', 'man headshot confident', 'man portrait sophisticated', 'man headshot masculine', 'man portrait mysterious'],
+  owen_Swinger: ['man portrait happy', 'man headshot confident', 'man portrait attractive', 'man headshot modern', 'man portrait charismatic'],
+  alex_Monogamish: ['man portrait thoughtful', 'man headshot intelligent', 'man portrait confident', 'man headshot modern', 'man portrait handsome'],
 };
 
 function loadConfig() {
@@ -88,7 +89,7 @@ async function getApiKey(mode) {
 
 async function fetchJson(url, options = {}) {
   return new Promise((resolve, reject) => {
-    const makeRequest = url.startsWith('https') ? https : require('http');
+    const makeRequest = url.startsWith('https') ? https : http;
     const req = makeRequest.request(url, { ...options }, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
@@ -113,7 +114,8 @@ async function fetchJson(url, options = {}) {
 async function downloadFile(url, filepath) {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(filepath);
-    https.get(url, (response) => {
+    const makeRequest = url.startsWith('https') ? https : http;
+    makeRequest.get(url, (response) => {
       response.pipe(file);
       file.on('finish', () => {
         file.close();
@@ -124,6 +126,18 @@ async function downloadFile(url, filepath) {
       reject(error);
     });
   });
+}
+
+function getSearchTerms(profile) {
+  const idMatch = Object.keys(searchTerms).find((key) => (
+    profile.id === key || profile.id.startsWith(`${key}_`)
+  ));
+
+  if (idMatch) {
+    return searchTerms[idMatch];
+  }
+
+  return searchTerms[profile.name] || [`${profile.name} dating profile portrait`];
 }
 
 async function downloadFromUnsplash(apiKey, profileName, searchTerms, photoDir) {
@@ -181,10 +195,19 @@ async function generateWithReplicate(apiKey, profileName, searchTerms, photoDir)
         }),
       });
 
+      // Check for API errors
+      if (response.detail || response.error) {
+        throw new Error(`Replicate API error: ${response.detail || response.error}${response.retry_after ? ` (retry after ${response.retry_after}s)` : ''}`);
+      }
+
       let prediction = response;
       let attempts = 0;
-      while (prediction.status !== 'succeeded' && attempts < 120) {
+
+      while (prediction && prediction.status !== 'succeeded' && attempts < 120) {
         await new Promise(resolve => setTimeout(resolve, 1000));
+        if (!prediction.urls || !prediction.urls.get) {
+          throw new Error(`Invalid response structure. Has urls: ${!!prediction.urls}, has get: ${prediction.urls ? !!prediction.urls.get : 'N/A'}`);
+        }
         prediction = await fetchJson(prediction.urls.get, {
           headers: { 'Authorization': `Token ${apiKey}` },
         });
@@ -259,13 +282,11 @@ Get API keys:
 
   for (const profile of profiles) {
     const archetypeLabel = profile.archetype || 'Unknown';
-    const archetypeKey = profile.archetype ? profile.archetype.split(' ')[0] : '';
-    let terms = (archetypeKey && searchTerms[`${profile.name}_${archetypeKey}`]) ||
-                searchTerms[`${profile.name}`] ||
-                [`${profile.name}`];
 
     console.log(`📁 ${profile.name} (${archetypeLabel})`);
+    fs.mkdirSync(profile.photoDir, { recursive: true });
 
+    const terms = getSearchTerms(profile);
     let count = 0;
     if (mode === '--unsplash') {
       count = await downloadFromUnsplash(apiKey, profile.name, terms, profile.photoDir);

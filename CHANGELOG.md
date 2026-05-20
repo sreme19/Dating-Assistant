@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-05-21
+
+### Added
+
+- Documented the latest profile-library, interview, Wingman, and photo workflow features in `LATEST_FEATURES.md`.
+- Added documentation for the current 43-profile archetype library split across `female_profiles/` and `male_profiles/`.
+- Added profile photo assets across many female and male persona folders.
+
+### Changed
+
+- Updated README data paths from the old `profiles/` folder to the current `female_profiles/` layout.
+- Improved `scripts/download-photos.mjs` so archetype-specific photo search terms resolve from stable profile IDs.
+- Made the photo script create missing `photos/` directories automatically before writing files.
+- Allowed image download URLs to use either HTTP or HTTPS.
+
+### Fixed
+
+- Fixed a photo-script lookup issue that caused most archetype profiles to fall back to generic name-only photo searches.
+- Improved Replicate API error handling and polling response validation in the photo script.
+
 ## [1.0.0] - 2026-05-19
 
 ### Added

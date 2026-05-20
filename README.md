@@ -8,6 +8,8 @@ Two modes:
 
 📖 **Full documentation:** [github.com/sreme19/Dating-Assistant/wiki](https://github.com/sreme19/Dating-Assistant/wiki)
 
+🆕 **Latest feature notes:** see [LATEST_FEATURES.md](LATEST_FEATURES.md)
+
 ---
 
 ## Quick setup
@@ -39,7 +41,7 @@ On first launch the app asks for your API key once, saves it locally, and never 
 
 ### AI Bestie (female users)
 
-**Gather Preferences** — creates your personal profile folder and runs a conversation to understand what you're looking for. Saved to `profiles/yourname_id/preferences.md`.
+**Gather Preferences** — creates your personal profile folder and runs a conversation to understand what you're looking for. Saved to `female_profiles/yourname_id/preferences.md`.
 
 **Interview a Match** — pick your profile, enter the man's details, and AI Bestie generates one tailored question at a time. You paste in his answers; it gives you a compatibility read (✅ / ⚠️ / 🚩) and the next question. At the end, you can save a male profile with an AI-written personality summary.
 
@@ -55,9 +57,14 @@ Select your profile (or create one). If you've been interviewed through this app
 |---|---|
 | API key | `~/.dating-assistant/config.json` |
 | Database | `~/.dating-assistant/data.db` |
-| Female profiles + preferences | `Dating Assistant/profiles/` |
+| Female profiles + preferences | `Dating Assistant/female_profiles/` |
 | Male profiles + personality | `Dating Assistant/male_profiles/` |
 | Interview transcripts | Inside each female profile folder |
+
+Current profile library:
+- 22 female archetype profiles
+- 21 male archetype profiles
+- Optional `photos/` folders for profile visuals
 
 You can drop images, PDFs, or notes into any profile folder — the app won't touch them.
 
